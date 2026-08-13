@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -81,15 +82,39 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _roomController =
       TextEditingController(text: "Genel");
 
-  void _enterChat() {
-    if (_nameController.text.trim().isNotEmpty &&
-        _roomController.text.trim().isNotEmpty) {
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedName();
+  }
+
+  // Hafızadaki kayıtlı ismi yükleme
+  void _loadSavedName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedName = prefs.getString('saved_username');
+    if (savedName != null && savedName.isNotEmpty) {
+      setState(() {
+        _nameController.text = savedName;
+      });
+    }
+  }
+
+  // İsmi hafızaya kaydetip sohbete geçme
+  void _enterChat() async {
+    String name = _nameController.text.trim();
+    String room = _roomController.text.trim();
+
+    if (name.isNotEmpty && room.isNotEmpty) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('saved_username', name);
+
+      if (!mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ChatScreen(
-            username: _nameController.text.trim(),
-            roomCode: _roomController.text.trim(),
+            username: name,
+            roomCode: room,
           ),
         ),
       );
@@ -141,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _roomController,
                 decoration: InputDecoration(
-                  labelText: 'Oda Kodu / Adı (Örn: Aşkım, Genel)',
+                  labelText: 'Oda Kodu / Adı (Örn: Genel)',
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),
                   filled: true,
