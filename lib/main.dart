@@ -26,7 +26,8 @@ void main() async {
   const InitializationSettings initializationSettings =
       InitializationSettings(android: initializationSettingsAndroid);
 
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  // await kelimesini siliyoruz, arka planda kendisi başlasın
+  flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
   runApp(const ChatApp());
 }
